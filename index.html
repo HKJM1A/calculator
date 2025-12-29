@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legendary Calculator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(135deg, #1b1f3b, #3b1f4b);
+    overflow: hidden;
+    transition: background 0.5s;
+    color: #fff;
+}
+
+body.light {
+    background: linear-gradient(135deg, #f0f0f0, #cfcfcf);
+    color: #000;
+}
+
+.calculator {
+    background: rgba(42,46,74,0.8);
+    backdrop-filter: blur(15px);
+    padding: 30px;
+    border-radius: 25px;
+    width: 360px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    transition: background 0.5s;
+}
+
+body.light .calculator {
+    background: rgba(255,255,255,0.6);
+}
+
+.display {
+    background: rgba(31,34,56,0.7);
+    color: #b8c7ff;
+    font-size: 2.2em;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: right;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    transition: transform 0.15s ease, background 0.5s, color 0.5s;
+}
+
+body.light .display {
+    background: rgba(255,255,255,0.7);
+    color: #000;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+button {
+    padding: 20px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    color: #fff;
+    background: rgba(59,63,97,0.6);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 5px rgba(28,31,51,0.7);
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+body.light button {
+    color: #000;
+    background: rgba(255,255,255,0.6);
+    box-shadow: 0 5px rgba(200,200,200,0.7);
+}
+
+button:hover { transform: translateY(-3px); box-shadow: 0 8px rgba(28,31,51,0.8); }
+body.light button:hover { box-shadow: 0 8px rgba(200,200,200,0.8); }
+
+button:active { transform: translateY(3px); box-shadow: 0 2px rgba(28,31,51,0.8); filter: brightness(1.2); }
+body.light button:active { box-shadow: 0 2px rgba(200,200,200,0.8); }
+
+.operator { background: rgba(90,99,216,0.7); }
+.operator:hover { background: rgba(107,115,240,0.8); }
+.operator:active { text-shadow:0 0 8px #fff; }
+
+body.light .operator { background: rgba(100,150,255,0.6); }
+body.light .operator:hover { background: rgba(120,170,255,0.8); }
+
+.equal { background: rgba(124,77,255,0.7); grid-column: span 2; }
+.equal:hover { background: rgba(142,101,255,0.8); }
+.equal:active { text-shadow:0 0 8px #fff; }
+
+.clear { background: rgba(255,95,109,0.7); }
+.clear:hover { background: rgba(255,122,132,0.8); }
+.clear:active { text-shadow:0 0 8px #fff; }
+
+.delete { background: rgba(255,165,0,0.7); }
+.delete:hover { background: rgba(255,183,51,0.8); }
+.delete:active { text-shadow:0 0 8px #fff; }
+
+.theme-toggle { grid-column: span 4; margin-top: 10px; background: rgba(255,255,255,0.2); color:#fff; }
+.theme-toggle:hover { background: rgba(255,255,255,0.4); }
+
+body.light .theme-toggle { color:#000; background: rgba(0,0,0,0.1); }
+body.light .theme-toggle:hover { background: rgba(0,0,0,0.2); }
+
+@media(max-width:400px){
+    .calculator { width:90%; padding:20px; }
+    button { padding:15px; font-size:1em; }
+    .display { font-size:1.8em; padding:15px; }
+}
+</style>
+</head>
+<body>
+<div class="calculator">
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+        <button class="clear" onclick="clearDisplay()">C</button>
+        <button class="delete" onclick="deleteLast()">DEL</button>
+        <button class="operator" onclick="appendOperator('%')">%</button>
+        <button class="operator" onclick="appendOperator('/')">÷</button>
+
+        <button onclick="appendNumber('7')">7</button>
+        <button onclick="appendNumber('8')">8</button>
+        <button onclick="appendNumber('9')">9</button>
+        <button class="operator" onclick="appendOperator('*')">×</button>
+
+        <button onclick="appendNumber('4')">4</button>
+        <button onclick="appendNumber('5')">5</button>
+        <button onclick="appendNumber('6')">6</button>
+        <button class="operator" onclick="appendOperator('-')">−</button>
+
+        <button onclick="appendNumber('1')">1</button>
+        <button onclick="appendNumber('2')">2</button>
+        <button onclick="appendNumber('3')">3</button>
+        <button class="operator" onclick="appendOperator('+')">+</button>
+
+        <button onclick="appendNumber('0')">0</button>
+        <button onclick="appendNumber('.')">.</button>
+        <button class="equal" onclick="calculate()">=</button>
+
+        <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme 🌗</button>
+    </div>
+</div>
+
+<audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+
+<script>
+const display = document.getElementById('display');
+const clickSound = document.getElementById('click-sound');
+let currentInput = '';
+let dark = true;
+
+function playClick(){ clickSound.currentTime=0; clickSound.play(); }
+
+function appendNumber(num){
+    playClick();
+    if(currentInput==='0' && num!=='.') currentInput=num;
+    else currentInput += num;
+    updateDisplay(true);
+}
+
+function appendOperator(op){
+    playClick();
+    if(currentInput==='') return;
+    const lastChar = currentInput.slice(-1);
+    if('+-*/%'.includes(lastChar)) currentInput=currentInput.slice(0,-1);
+    currentInput += op;
+    updateDisplay(true);
+}
+
+function clearDisplay(){ playClick(); currentInput=''; updateDisplay(true); }
+function deleteLast(){ playClick(); currentInput=currentInput.slice(0,-1); updateDisplay(true); }
+
+function calculate(){
+    playClick();
+    if(currentInput==='') return;
+    try{
+        let result = eval(currentInput.replace(/÷/g,'/').replace(/×/g,'*'));
+        currentInput=result.toString();
+        updateDisplay();
+    }catch{
+        display.innerText='Error';
+        currentInput='';
+    }
+}
+
+function updateDisplay(animation=false){
+    display.innerText=currentInput || '0';
+    if(animation){
+        display.style.transform='scale(1.05)';
+        setTimeout(()=>display.style.transform='scale(1)',100);
+    }
+}
+
+function toggleTheme(){
+    document.body.classList.toggle('light');
+    dark = !dark;
+}
+</script>
+</body>
+</html>
